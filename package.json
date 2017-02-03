@@ -1,0 +1,22 @@
+{
+  "name": "kankei",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "push-heroku": "git push heroku master"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "connect-busboy": "0.0.2",
+    "express": "^4.14.0",
+    "fs-extra": "^0.30.0",
+    "multer": "^1.1.0",
+    "path": "^0.12.7",
+    "pg": "^6.1.0",
+    "ws": "^1.1.1"
+  }
+}
