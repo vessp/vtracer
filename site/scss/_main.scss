@@ -1,6 +1,85 @@
-body {
-    background: #99ff99;
+.vbox {
+  display: flex; //this is only for children
+  flex-direction: column;
 }
+
+.hbox {
+  display: flex; //this is only for children
+  flex-direction: row;
+}
+
+.flow1 {
+  flex: 1;
+}
+
+.flow-start {
+  justify-content: flex-start;
+}
+
+.flow-end {
+  justify-content: flex-end;
+}
+
+.ebb-start {
+  align-items: flex-start;
+}
+
+.iebb-start {
+  align-self: flex-start;
+}
+
+.iebb-stretch {
+  align-self: stretch;
+}
+
+//justify: flex-start | flex-end | center | space-between | space-around;
+//align-items: flex-start | flex-end | center | baseline | stretch;
+
+
+
+html {
+  width: 100%;
+  height: 100%;
+  @extend .vbox;
+
+  body {
+    @extend .vbox;
+    @extend .flow1;
+
+    .body-content {
+      @extend .vbox;
+      @extend .flow1;
+
+      background: #f99;
+    }
+  }
+}
+
+ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.home {
+  @extend .iebb-stretch;
+  @extend .flow1;
+  @extend .vbox;
+
+
+  .filters {
+    background: #9f9;
+  }
+
+  .lines {
+    background: #99f;
+    @extend .flow1;
+  }
+
+  // width: 400px;
+  // height: 300px;
+}
+
 
 // $bg: #222;
 // $border: #464545;

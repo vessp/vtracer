@@ -56,15 +56,27 @@ export function connectSocket() {
           }
         }
         webSocket.onerror = (event) => {
-          alert('Socket Error: ' + JSON.stringify(event))
+          console.err('Socket Error: ' + JSON.stringify(event))
         }
     }
 }
 
 export function onTrace(a) {
     return (dispatch, getState) => {
-        console.log('onTrace', a)
+        // console.log('onTrace', a)
         dispatch({type: 'trace', payload: a})
+    }
+}
+
+export function setFilter(i, filter) {
+    return (dispatch, getState) => {
+        dispatch({type: 'setFilter', payload: {i,filter}})
+    }
+}
+
+export function addFilter(filter) {
+    return (dispatch, getState) => {
+        dispatch({type: 'addFilter', payload: filter})
     }
 }
 

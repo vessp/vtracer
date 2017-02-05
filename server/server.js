@@ -40,6 +40,26 @@ app.route('/')
         res.sendFile(INDEX)
     })
 
+app.post('/traces', function(req, res) {
+    var postData = '';
+    req.on('data', function (chunk) {
+        postData += chunk
+    })
+    req.on('end', function() {
+        postData = JSON.parse(postData)
+        // console.log('postData', postData)
+        yell({type:'trace', payload:postData.trace})
+        // const name = postData.name
+        // const data = new Buffer(postData.data)
+        // DB.insertAudio(name, data, () => {
+            res.end('success')
+        //     yellPlaylist()
+        // }, () => {
+        //     res.end('error')
+        // })
+    });
+})
+
 // app.post('/upload', function(req,res){
 
 //     console.log(req.raw)
@@ -163,7 +183,7 @@ wss.on('connection', (ws) => {
     traceCount++
     whisper(ws, {
       'type':'trace',
-      'payload': "myTraceMessage"
+      'payload': {instant: Date.now(), text:"[MyComponent] myTraceMessage" + traceCount}
     })
     if(traceCount > 3)
       clearInterval(intervalId)
@@ -184,7 +204,11 @@ wss.on('connection', (ws) => {
 })
 
 function whisper(ws, parcel) {
-  ws.send(JSON.stringify(parcel))
+  try {
+    ws.send(JSON.stringify(parcel))
+  } catch (e) {
+    console.log('whipser Error', e)
+  }
 }
 
 function yell(parcel) {

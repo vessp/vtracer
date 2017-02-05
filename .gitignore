@@ -49,3 +49,8 @@ Temporary Items
 
 node_modules/
 *.log
+
+site/bin
+site/bin/bundle.css
+site/bin/bundle.js
+site/bin/bundle.js.map
