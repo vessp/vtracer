@@ -183,10 +183,14 @@ wss.on('connection', (ws) => {
     traceCount++
     whisper(ws, {
       'type':'trace',
-      'payload': {instant: Date.now(), text:"[MyComponent] myTraceMessage" + traceCount}
+      'payload': {
+        bundle: 'com.vessp.app'+traceCount,
+        instant: Date.now(),
+        text:"[MyComponent] myTraceMessage" + traceCount
+      }
     })
-    if(traceCount > 3)
-      clearInterval(intervalId)
+    // if(traceCount > 3)
+    //   clearInterval(intervalId)
   }, 1500)
 
   ws.on('close', () => {
@@ -207,7 +211,7 @@ function whisper(ws, parcel) {
   try {
     ws.send(JSON.stringify(parcel))
   } catch (e) {
-    console.log('whipser Error', e)
+    console.log('whisper Error', e)
   }
 }
 

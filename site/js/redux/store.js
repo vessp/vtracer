@@ -1,35 +1,29 @@
-import { createStore, combineReducers, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
-import thunk from 'redux-thunk';
-import { routerReducer } from 'react-router-redux';
-import Immutable from 'immutable';
+import { createStore, combineReducers, applyMiddleware } from 'redux'
+import promiseMiddleware from 'redux-promise-middleware'
+import thunkMiddleware from 'redux-thunk'
+import Immutable from 'immutable'
 
-import * as reducers from './reducers';
+import appReducer from './reducer'
 
 let store = null
 const dynamicReducers = {}
 
 function getAllReducers() {
   return combineReducers({
-    ...reducers,
-    routing: routerReducer,
-    ...dynamicReducers
+    app:appReducer,
+    // ...dynamicReducers //why can't i do this?
   })
 }
 
 //CREATE STORE------------------------------------------------------------
 
 export function createAppStore() {
-  let createStoreWithMiddleware = applyMiddleware(
-    promiseMiddleware, thunk
-  )(createStore)
-
-  let storeArgs = [getAllReducers()]
-  // @if DEPLOYMENT_ENV='dev'
-  storeArgs.push(window.devToolsExtension && window.devToolsExtension());
-  // @endif
-
-  store = createStoreWithMiddleware(...storeArgs)
+  store = createStore(getAllReducers(), {}, 
+    applyMiddleware(
+      thunkMiddleware,
+      promiseMiddleware()
+    )
+  )
   return store
 }
 
@@ -110,3 +104,11 @@ export function getState(reducerName, ...getInArgs) {
     return state
 }
 window.gs = getState //TODO disable 
+
+export function asyncAction(func) {
+  return (...args) => {
+    return (_dispatch, _getState) => {
+      func(...args)
+    }
+  }
+}

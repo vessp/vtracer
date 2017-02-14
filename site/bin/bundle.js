@@ -29383,25 +29383,13 @@ var _reactDom = require('react-dom');
 
 var _reactDom2 = _interopRequireDefault(_reactDom);
 
-var _redux = require('redux');
-
 var _reactRedux = require('react-redux');
 
-var _reduxPromiseMiddleware = require('redux-promise-middleware');
-
-var _reduxPromiseMiddleware2 = _interopRequireDefault(_reduxPromiseMiddleware);
-
-var _reduxThunk = require('redux-thunk');
-
-var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
+var _store = require('./redux/store');
 
 var _actions = require('./redux/actions');
 
 var actions = _interopRequireWildcard(_actions);
-
-var _reducers = require('./redux/reducers');
-
-var _reducers2 = _interopRequireDefault(_reducers);
 
 var _Home = require('./components/Home');
 
@@ -29417,12 +29405,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var reducers = (0, _redux.combineReducers)({
-  app: _reducers2.default
-});
-
-var store = (0, _redux.createStore)(reducers, {}, (0, _redux.applyMiddleware)(_reduxThunk2.default, (0, _reduxPromiseMiddleware2.default)()));
-
+var store = (0, _store.createAppStore)();
 store.dispatch(actions.init());
 
 var App = function (_React$Component) {
@@ -29450,7 +29433,7 @@ var App = function (_React$Component) {
 
 _reactDom2.default.render(_react2.default.createElement(App, null), document.getElementsByClassName('body-content')[0]);
 
-},{"./components/Home":246,"./redux/actions":247,"./redux/reducers":248,"react":231,"react-dom":63,"react-redux":200,"redux":240,"redux-promise-middleware":232,"redux-thunk":234}],246:[function(require,module,exports){
+},{"./components/Home":246,"./redux/actions":247,"./redux/store":249,"react":231,"react-dom":63,"react-redux":200}],246:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -29466,6 +29449,10 @@ var _react2 = _interopRequireDefault(_react);
 var _axios = require('axios');
 
 var _axios2 = _interopRequireDefault(_axios);
+
+var _reactDom = require('react-dom');
+
+var _reactDom2 = _interopRequireDefault(_reactDom);
 
 var _reactRedux = require('react-redux');
 
@@ -29485,6 +29472,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
+// import ColorPicker from 'rc-color-picker'
+
 var Home = function (_React$Component) {
   _inherits(Home, _React$Component);
 
@@ -29493,16 +29482,49 @@ var Home = function (_React$Component) {
 
     var _this = _possibleConstructorReturn(this, (Home.__proto__ || Object.getPrototypeOf(Home)).call(this, props));
 
-    _this.onChangeQuery = _this.onChangeQuery.bind(_this);
+    _this.selects = _this.selects.bind(_this);
     return _this;
   }
 
   _createClass(Home, [{
-    key: 'onChangeQuery',
-    value: function onChangeQuery(i, e) {
-      var filter = this.props.filters.get(i);
-      filter = filter.set('query', e.target.value);
-      this.props.actions.setFilter(i, filter);
+    key: 'selects',
+    value: function selects(f, t) {
+      var tText = t.get('text');
+      var fQuery = f.get('query');
+      var fQueryMode = f.get('queryMode');
+
+      if (fQuery) {
+        if (fQueryMode == 'contains') {
+          if (tText.toLowerCase().indexOf(fQuery.toLowerCase()) != -1) return true;
+        } else if (fQueryMode == 'regex') {
+          try {
+            var fQueryReg = new RegExp(fQuery, 'g');
+            if (tText.match(fQueryReg) != null) return true;
+          } catch (e) {
+            //handle invalid regex
+            console.log(e);
+          }
+        }
+      }
+
+      return false;
+    }
+  }, {
+    key: 'componentDidUpdate',
+    value: function componentDidUpdate(prevProps, prevState) {
+      if (this.props.shouldScrollBottom) {
+        var ele = _reactDom2.default.findDOMNode(this.tracesDiv);
+        // ele.scrollIntoView({behavior: "smooth"})
+        ele.scrollTop = 99999;
+      }
+
+      if (!this.addedScrollListener) {
+        this.addedScrollListener = true;
+        var _ele = _reactDom2.default.findDOMNode(this.tracesDiv);
+        _ele.addEventListener('scroll', function (e) {
+          console.log('e', e);
+        });
+      }
     }
   }, {
     key: 'render',
@@ -29511,20 +29533,38 @@ var Home = function (_React$Component) {
 
       var _props = this.props,
           filters = _props.filters,
-          traces = _props.traces;
+          traces = _props.traces,
+          actions = _props.actions,
+          shouldScrollBottom = _props.shouldScrollBottom;
 
+
+      var activeFilters = filters.filter(function (f) {
+        return f.get('isActive');
+      });
 
       var filteredTraces = traces.filter(function (t) {
-        var tText = t.get('text');
-        var passed = true;
-
-        filters.forEach(function (f) {
-          var fQuery = f.get('query');
-          if (fQuery && tText.toLowerCase().indexOf(fQuery.toLowerCase()) == -1) passed = false;
+        return t.get('bundle').indexOf(_this2.props.bundleQuery) != -1;
+      }).filter(function (t) {
+        var showing = true;
+        activeFilters.forEach(function (f) {
+          if (_this2.selects(f, t)) {
+            var show = f.get('show');
+            if (show != null) showing = show;
+          }
         });
-
-        return passed;
+        return showing;
+      }).map(function (t) {
+        var tText = t.get('text');
+        activeFilters.forEach(function (f) {
+          var fQuery = f.get('query');
+          if (fQuery && tText.toLowerCase().indexOf(fQuery.toLowerCase()) != -1) {
+            t = t.merge(f);
+          }
+        });
+        return t;
       });
+
+      // console.log('filteredTraces', filteredTraces.toJS())
 
       return _react2.default.createElement(
         'div',
@@ -29534,43 +29574,149 @@ var Home = function (_React$Component) {
           { className: 'filters' },
           _react2.default.createElement(
             'div',
-            null,
-            filters.map(function (filter, i) {
-              return _react2.default.createElement(
-                'div',
-                { key: i },
-                _react2.default.createElement('input', { type: 'text', value: filter.get('query') || '',
-                  onChange: function onChange(e) {
-                    return _this2.onChangeQuery(i, e);
-                  } })
-              );
-            })
+            { className: 'filters-controls' },
+            _react2.default.createElement('input', { type: 'text', className: 'form-control',
+              value: this.props.bundleQuery,
+              onChange: function onChange(e) {
+                return actions.setBundleQuery(e.target.value);
+              } }),
+            _react2.default.createElement(
+              'button',
+              { className: 'btn btn-default', onClick: function onClick() {
+                  return actions.createFilter();
+                } },
+              _react2.default.createElement('i', { className: 'fa fa-plus' })
+            ),
+            _react2.default.createElement(
+              'button',
+              { className: 'btn btn-default', onClick: function onClick() {
+                  return actions.clearTraces();
+                } },
+              _react2.default.createElement('i', { className: 'fa fa-ban' })
+            ),
+            shouldScrollBottom ? _react2.default.createElement(
+              'button',
+              { className: 'btn btn-info', onClick: function onClick() {
+                  return actions.set({ 'shouldScrollBottom': false });
+                } },
+              _react2.default.createElement('i', { className: 'fa fa-hand-o-down' })
+            ) : _react2.default.createElement(
+              'button',
+              { className: 'btn btn-default', onClick: function onClick() {
+                  return actions.set({ 'shouldScrollBottom': true });
+                } },
+              _react2.default.createElement('i', { className: 'fa fa-hand-paper-o' })
+            )
           ),
-          _react2.default.createElement(
-            'button',
-            { onClick: function onClick() {
-                return _this2.props.actions.addFilter({});
-              } },
-            '+'
-          )
-        ),
-        _react2.default.createElement(
-          'ul',
-          { className: 'lines' },
-          filteredTraces.map(function (trace, i) {
+          filters.map(function (filter, i) {
+            var mod = function mod(filter) {
+              return actions.setFilter(i, filter);
+            };
             return _react2.default.createElement(
-              'li',
-              { key: i },
-              trace.get('text')
+              'div',
+              { key: i, className: 'filter' },
+              filter.get('isActive') ? _react2.default.createElement(
+                'button',
+                { className: 'btn btn-info', onClick: function onClick() {
+                    return mod(filter.set('isActive', false));
+                  } },
+                'On'
+              ) : _react2.default.createElement(
+                'button',
+                { className: 'btn btn-default', onClick: function onClick() {
+                    return mod(filter.set('isActive', true));
+                  } },
+                'Off'
+              ),
+              _react2.default.createElement('input', { className: 'form-control', type: 'text', value: filter.get('query') || '',
+                onChange: function onChange(e) {
+                  return mod(filter.set('query', e.target.value));
+                }
+              }),
+              filter.get('queryMode') == 'contains' && _react2.default.createElement(
+                'button',
+                { className: 'btn btn-default', onClick: function onClick() {
+                    return mod(filter.set('queryMode', 'regex'));
+                  } },
+                'C'
+              ),
+              filter.get('queryMode') == 'regex' && _react2.default.createElement(
+                'button',
+                { className: 'btn btn-info', onClick: function onClick() {
+                    return mod(filter.set('queryMode', 'contains'));
+                  } },
+                'R'
+              ),
+              filter.get('show') == true && _react2.default.createElement(
+                'button',
+                { className: 'btn btn-success', onClick: function onClick() {
+                    return mod(filter.set('show', false));
+                  } },
+                'S'
+              ),
+              filter.get('show') == false && _react2.default.createElement(
+                'button',
+                { className: 'btn btn-danger', onClick: function onClick() {
+                    return mod(filter.set('show', null));
+                  } },
+                'H'
+              ),
+              filter.get('show') == null && _react2.default.createElement(
+                'button',
+                { className: 'btn btn-default', onClick: function onClick() {
+                    return mod(filter.set('show', true));
+                  } },
+                '\xA0\xA0'
+              ),
+              _react2.default.createElement('input', { className: 'form-control', type: 'text', value: filter.getIn(['style', 'color']) || '',
+                onChange: function onChange(e) {
+                  return mod(filter.setIn(['style', 'color'], e.target.value));
+                }
+              }),
+              _react2.default.createElement('input', { className: 'form-control', type: 'text', value: filter.getIn(['style', 'background']) || '',
+                onChange: function onChange(e) {
+                  return mod(filter.setIn(['style', 'background'], e.target.value));
+                }
+              }),
+              _react2.default.createElement(
+                'button',
+                { className: 'btn btn-default', onClick: function onClick() {
+                    return actions.swapFilters(i, i - 1);
+                  } },
+                _react2.default.createElement('i', { className: 'fa fa-arrow-up' })
+              ),
+              _react2.default.createElement(
+                'button',
+                { className: 'btn btn-default', onClick: function onClick() {
+                    return actions.swapFilters(i, i + 1);
+                  } },
+                _react2.default.createElement('i', { className: 'fa fa-arrow-down' })
+              ),
+              _react2.default.createElement(
+                'button',
+                { className: 'btn btn-default', onClick: function onClick() {
+                    return actions.removeFilter(i);
+                  } },
+                _react2.default.createElement('i', { className: 'fa fa-remove' })
+              )
             );
           })
         ),
         _react2.default.createElement(
-          'button',
-          { onClick: function onClick() {
-              return _axios2.default.post('http://localhost:3000/traces', { trace: { instant: Date.now(), text: 'myPostedTrace' } });
+          'div',
+          { className: 'traces', ref: function ref(_ref) {
+              return _this2.tracesDiv = _ref;
             } },
-          'Send'
+          filteredTraces.map(function (trace, i) {
+            var style = trace.get('style') ? trace.get('style').toJS() : {};
+
+            return _react2.default.createElement(
+              'button',
+              { className: 'trace', key: i, type: 'button',
+                style: style, title: trace.get('bundle') },
+              trace.get('text')
+            );
+          })
         )
       );
     }
@@ -29582,6 +29728,8 @@ var Home = function (_React$Component) {
 exports.default = (0, _reactRedux.connect)(function (state) {
   //map store to props
   return {
+    bundleQuery: state.app.get('bundleQuery'),
+    shouldScrollBottom: state.app.get('shouldScrollBottom'),
     traces: state.app.get('traces'),
     filters: state.app.get('filters')
   };
@@ -29592,199 +29740,320 @@ exports.default = (0, _reactRedux.connect)(function (state) {
   };
 })(Home);
 
-},{"../redux/actions":247,"axios":1,"react":231,"react-redux":200,"redux":240}],247:[function(require,module,exports){
+},{"../redux/actions":247,"axios":1,"react":231,"react-dom":63,"react-redux":200,"redux":240}],247:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
-exports.init = init;
-exports.connectSocket = connectSocket;
-exports.onTrace = onTrace;
-exports.setFilter = setFilter;
-exports.addFilter = addFilter;
-exports.doSocketConnect = doSocketConnect;
-exports.doSocketDisconnect = doSocketDisconnect;
-// const electron = window.require('electron')
-// const {ipcRenderer, shell, app} = electron
-// const {dialog} = electron.remote
-// const fs = window.require('fs')
-// const axios = window.require('axios')
-// const settings = window.require('electron-settings')
-// import {trace, notify} from '../util/Tracer'
-// const {exec} = window.require('child_process')
-// import IO from '../util/IO'
+exports.removeFilter = exports.swapFilters = exports.createFilter = exports.setFilter = exports.setBundleQuery = exports.clearTraces = exports.pushTrace = exports.set = exports.doSocketConnect = exports.init = undefined;
 
-// const config = ipcRenderer.sendSync('config')
+var _immutable = require('immutable');
 
-// let webSocket = null
-// let _dispatch = null
+var _immutable2 = _interopRequireDefault(_immutable);
 
-// function toReducer(type, payload) {
-//     _dispatch({type, payload})
-// }
-// function toMain(type, payload) {
-//     ipcRenderer.send(type, payload)
-// }
+var _store = require('./store');
 
-// export function playGlobal(name) {
-//     return (dispatch, getState) => {
-//         webSocket.send(JSON.stringify({
-//             type: 'play',
-//             payload: name
-//         }))
-//     }
-// }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function init() {
-    return function (dispatch, getState) {
-        dispatch(connectSocket());
-    };
-}
+var get = function get() {
+  for (var _len = arguments.length, getIn = Array(_len), _key = 0; _key < _len; _key++) {
+    getIn[_key] = arguments[_key];
+  }
 
-function connectSocket() {
-    return function (dispatch, getState) {
-        var webSocket = new WebSocket('ws://localhost:3000');
-        webSocket.onopen = function (event) {
-            console.log('WebSocket.onopen');
-        };
-        webSocket.onclose = function (event) {
-            console.log('WebSocket.onclose');
-            dispatch(connectSocket());
-        };
-        webSocket.onmessage = function (event) {
-            var jparcel = event.data;
-            if (jparcel) {
-                var parcel = JSON.parse(jparcel);
-                // console.log('onParcel:', parcel.type, parcel.payload)
-                if (parcel.type == 'trace') {
-                    dispatch(onTrace(parcel.payload));
-                }
-            }
-        };
-        webSocket.onerror = function (event) {
-            console.err('Socket Error: ' + JSON.stringify(event));
-        };
-    };
-}
+  return _store.getState.apply(undefined, ['app'].concat(getIn));
+};
+var send = (0, _store.tightenDispatch)('cheekySet');
 
-function onTrace(a) {
-    return function (dispatch, getState) {
-        // console.log('onTrace', a)
-        dispatch({ type: 'trace', payload: a });
-    };
-}
+var webSocket = null;
 
-function setFilter(i, filter) {
-    return function (dispatch, getState) {
-        dispatch({ type: 'setFilter', payload: { i: i, filter: filter } });
-    };
-}
+//----------------------------------------------------------------
+var init = exports.init = (0, _store.asyncAction)(function () {
+  (0, _store.dispatch)(doSocketConnect());
+});
 
-function addFilter(filter) {
-    return function (dispatch, getState) {
-        dispatch({ type: 'addFilter', payload: filter });
-    };
-}
+var doSocketConnect = exports.doSocketConnect = (0, _store.asyncAction)(function () {
+  if (!webSocket) webSocket = new WebSocket('ws://localhost:3000');
 
-function doSocketConnect() {
-    return function (dispatch, getState) {
-        // webSocket = new WebSocket(config.URL_WEB_SOCKET)
-        // webSocket.onopen = (event) => {
-        //     toReducer('isSocketConnected', true)
-        //     startPings(dispatch, getState)
-        // }
-        // webSocket.onclose = (event) => {
-        //     toReducer('isSocketConnected', false)
-        // }
-        // webSocket.onmessage = (event) => {
-        //     if(event.data) {
-        //         const data = JSON.parse(event.data)
-        //         // trace('onMessage:', data.type, data.message)
-        //         if(data.type == 'playlist') {
-        //             dispatch({type: 'playlist', payload: data.message})
-        //         }
-        //         else if(data.type == 'play') {
-        //             dispatch(playLocal(data.message))
-        //         }
-        //         else if(data.type == 'userCount') {
-        //             dispatch({type: 'userCount', payload: data.message})
-        //         }
-        //     }
-        //     toReducer('lastMessageInstant', Date.now())
-        // }
-        // webSocket.onerror = (event) => {
-        //     alert('Socket Error: ' + JSON.stringify(event))
-        // }
-    };
-}
+  webSocket.onopen = function (event) {
+    send('isSocketConnected', true);
+  };
+  webSocket.onclose = function (event) {
+    send('isSocketConnected', false);
+    (0, _store.dispatch)(doSocketConnect());
+  };
+  webSocket.onmessage = function (event) {
+    var jparcel = event.data;
+    if (jparcel) {
+      var parcel = JSON.parse(jparcel);
+      if (parcel.type == 'trace') {
+        (0, _store.dispatch)(pushTrace(parcel.payload));
+      }
+    }
+  };
+  webSocket.onerror = function (event) {
+    console.err('Socket Error: ' + JSON.stringify(event));
+  };
+});
 
-function doSocketDisconnect() {
-    return function (dispatch, getState) {
-        // webSocket.close()
-        // webSocket = null
-    };
-}
+var set = exports.set = (0, _store.asyncAction)(function (obj) {
+  send(obj);
+});
 
-},{}],248:[function(require,module,exports){
+var pushTrace = exports.pushTrace = (0, _store.asyncAction)(function (trace) {
+  var traces = get('traces');
+  traces = traces.push(_immutable2.default.fromJS(trace));
+  traces = traces.sortBy(function (t) {
+    return t.get('instant');
+  });
+  send({ traces: traces });
+});
+
+var clearTraces = exports.clearTraces = (0, _store.asyncAction)(function () {
+  send('traces', _immutable2.default.fromJS([]));
+});
+
+var setBundleQuery = exports.setBundleQuery = (0, _store.asyncAction)(function (val) {
+  send('bundleQuery', val);
+});
+
+var setFilter = exports.setFilter = (0, _store.asyncAction)(function (i, filter) {
+  var filters = get('filters');
+  filters = filters.set(i, filter);
+  send({ filters: filters });
+});
+
+var createFilter = exports.createFilter = (0, _store.asyncAction)(function (filter) {
+  filter = filter || {};
+  filter.query = filter.query || '';
+  filter.queryMode = filter.queryMode || 'contains';
+  filter.isActive = filter.isActive == undefined ? true : filter.isActive;
+  filter.style = filter.style || {};
+
+  var filters = get('filters');
+  filters = filters.push(_immutable2.default.fromJS(filter));
+  send({ filters: filters });
+});
+
+var swapFilters = exports.swapFilters = (0, _store.asyncAction)(function (fromIndex, toIndex) {
+  var filters = get('filters');
+  if (toIndex < 0 || toIndex > filters.size - 1) return;
+
+  var fromFilter = filters.get(fromIndex);
+  var toFilter = filters.get(toIndex);
+  filters = filters.set(toIndex, fromFilter);
+  filters = filters.set(fromIndex, toFilter);
+  send({ filters: filters });
+});
+
+var removeFilter = exports.removeFilter = (0, _store.asyncAction)(function (i) {
+  var filters = get('filters');
+  filters = filters.remove(i);
+  send({ filters: filters });
+});
+
+},{"./store":249,"immutable":50}],248:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
-    value: true
+  value: true
 });
-var Immutable = require('immutable');
 
-// import {trace} from '../util/Tracer'
-// import IO from '../util/IO'
-// const fs = window.require('fs')
+var _immutable = require('immutable');
 
-// const config = ipcRenderer.sendSync('config')
+var _immutable2 = _interopRequireDefault(_immutable);
 
-var initialState = Immutable.fromJS({
-    traces: [],
-    filters: [{}]
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var initialState = _immutable2.default.fromJS({
+  isSocketConnected: false,
+  shouldScrollBottom: true,
+  traces: [],
+  bundleQuery: '',
+  filters: [{
+    query: 'message2',
+    queryMode: 'contains',
+    isActive: true,
+    show: null,
+    style: { color: 'blue', background: 'black' }
+  }, {
+    query: 'message3',
+    queryMode: 'contains',
+    isActive: true,
+    show: null,
+    style: { color: 'red', background: 'black' }
+  }]
 });
 
 function appReducer() {
-    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
-    var action = arguments[1];
-    var type = action.type,
-        payload = action.payload;
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : initialState;
+  var action = arguments[1];
+  var type = action.type,
+      payload = action.payload;
 
-    var newState = void 0;
-    // trace('reducer', type, payload)
-    // console.log('state', state, state.get('traces'))
 
-    switch (type) {
-        case 'trace':
-            var trace = Immutable.fromJS(payload);
-            var traces = state.get('traces');
-            traces = traces.push(trace);
-            traces = traces.sortBy(function (t) {
-                return t.get('instant');
-            });
-            newState = state.set('traces', traces);
-            return newState;
-        case 'setFilter':
-            var i = payload.i,
-                filter = payload.filter;
+  switch (type) {
+    case 'cheekySet':
+      for (var key in payload) {
+        if (!state.has(key) || !state.get(key)) state = state.set(key, _immutable2.default.fromJS(payload[key]));else if (payload[key] == null || _immutable2.default.List.isList(payload[key]) || _immutable2.default.Set.isSet(payload[key])) state = state.setIn([key], payload[key]);else state = state.mergeIn([key], payload[key]);
+      }
+      // console.log('state', state, state.get('filters'), payload)
+      return state;
+    case 'clean':
+      return initialState;
+  }
 
-            var filters = state.get('filters');
-            filters = filters.set(i, filter);
-            newState = state.set('filters', filters);
-            return newState;
-        case 'addFilter':
-            filters = state.get('filters');
-            filters = filters.push(Immutable.fromJS(payload));
-            newState = state.set('filters', filters);
-            return newState;
-        default:
-            return state;
-    }
+  return state;
 }
 
 exports.default = appReducer;
 
-},{"immutable":50}]},{},[245])
+},{"immutable":50}],249:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createAppStore = createAppStore;
+exports.addDynamicReducer = addDynamicReducer;
+exports.removeDynamicReducer = removeDynamicReducer;
+exports.dispatch = dispatch;
+exports.tightenDispatch = tightenDispatch;
+exports.getState = getState;
+exports.asyncAction = asyncAction;
+
+var _redux = require('redux');
+
+var _reduxPromiseMiddleware = require('redux-promise-middleware');
+
+var _reduxPromiseMiddleware2 = _interopRequireDefault(_reduxPromiseMiddleware);
+
+var _reduxThunk = require('redux-thunk');
+
+var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
+
+var _immutable = require('immutable');
+
+var _immutable2 = _interopRequireDefault(_immutable);
+
+var _reducer = require('./reducer');
+
+var _reducer2 = _interopRequireDefault(_reducer);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+var store = null;
+var dynamicReducers = {};
+
+function getAllReducers() {
+  return (0, _redux.combineReducers)({
+    app: _reducer2.default
+  });
+}
+
+//CREATE STORE------------------------------------------------------------
+
+function createAppStore() {
+  store = (0, _redux.createStore)(getAllReducers(), {}, (0, _redux.applyMiddleware)(_reduxThunk2.default, (0, _reduxPromiseMiddleware2.default)()));
+  return store;
+}
+
+//DYNAMIC REDUCERS--------------------------------------------------------
+
+function addDynamicReducer(name, reducer) {
+  if (dynamicReducers[name]) console.warn('addDynamicReducer(): warning dynamic reducer with name ' + name + ' already exists');
+
+  dynamicReducers[name] = reducer;
+  store.replaceReducer(getAllReducers());
+}
+
+function removeDynamicReducer(name) {
+  if (!dynamicReducers[name]) console.warn('removeDynamicReducer(): warning dynamic reducer with name ' + name + ' does not exists');
+
+  // delete dynamicReducers[name]
+  // when i deleted the reducer, redux printed an error in the console
+  // so instead of completely deleting the reducer, i will just clear it
+  dynamicReducers[name] = function (state) {
+    return _immutable2.default.Map({});
+  };
+  store.replaceReducer(getAllReducers());
+}
+
+//HELPERS----------------------------------------------------------------
+
+function dispatch() {
+  for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+
+  var numArgs = args.length;
+  var a0 = args[0];
+  var a1 = args[1];
+
+  // console.log(args.map(a => typeof a), args)
+
+  if (typeof a0 == 'function') {
+    console.assert(numArgs == 1, 'unexpected dispatch args');
+    return store.dispatch(a0); //a0 is an action
+  } else if (typeof a0 == 'string') {
+    var type = a0;
+    if (numArgs == 1) {
+      return store.dispatch({ type: type });
+    } else {
+      var payload = args[numArgs - 1];
+      //loop through the args building up the payload object
+      for (var i = numArgs - 2; i >= 1; i--) {
+        // console.assert(typeof args[i] == 'string', 'unexpected dispatch args')
+        payload = _defineProperty({}, args[i], payload);
+      }
+      return store.dispatch({ type: type, payload: payload });
+    }
+  } else {
+    throw new Error('unexpected dispatch args');
+  }
+}
+
+function tightenDispatch() {
+  for (var _len2 = arguments.length, tighteningArgs = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+    tighteningArgs[_key2] = arguments[_key2];
+  }
+
+  return function () {
+    for (var _len3 = arguments.length, dispatchArgs = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+      dispatchArgs[_key3] = arguments[_key3];
+    }
+
+    if (dispatchArgs.length == 1 && (typeof dispatchArgs[0] == 'function' || typeof dispatchArgs[0] == 'string')) return dispatch.apply(undefined, dispatchArgs);else return dispatch.apply(undefined, tighteningArgs.concat(dispatchArgs));
+  };
+}
+
+function getState(reducerName) {
+  var state = store.getState();
+
+  if (reducerName && !state[reducerName]) console.warn('reducer with name "' + reducerName + '" does not exist');
+
+  for (var _len4 = arguments.length, getInArgs = Array(_len4 > 1 ? _len4 - 1 : 0), _key4 = 1; _key4 < _len4; _key4++) {
+    getInArgs[_key4 - 1] = arguments[_key4];
+  }
+
+  if (reducerName && getInArgs && getInArgs.length > 0) return state[reducerName].getIn(getInArgs);else if (reducerName) return state[reducerName];else return state;
+}
+window.gs = getState; //TODO disable 
+
+function asyncAction(func) {
+  return function () {
+    for (var _len5 = arguments.length, args = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+      args[_key5] = arguments[_key5];
+    }
+
+    return function (_dispatch, _getState) {
+      func.apply(undefined, args);
+    };
+  };
+}
+
+},{"./reducer":248,"immutable":50,"redux":240,"redux-promise-middleware":232,"redux-thunk":234}]},{},[245])
 
 //# sourceMappingURL=bundle.js.map
