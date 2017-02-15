@@ -6,6 +6,8 @@ const busboy = require('connect-busboy') //middleware for form/file upload
 const fs = require('fs-extra')       //File System - for file manipulation
 const multer = require('multer')
 
+console.log('ne', process.env.NPM_CONFIG_PRODUCTION)
+
 if (!require("piping")("./server/server.js")) { return }
 
 
@@ -221,70 +223,3 @@ function yell(parcel, sendingWs=null) {
       whisper(ws, parcel)
   })
 }
-
-// function whisperVersion(ws){
-//     ws.send(JSON.stringify(
-//     {
-//         'type':'version',
-//         'message': "1.1"
-//     }
-//     ))
-// }
-
-// function whisperPlaylist(ws){
-//     DB.queryPlaylist(playlist => {
-//         ws.send(JSON.stringify({
-//             'type':'playlist',
-//             'message': playlist
-//         }))
-//     })
-
-//     // fs.readdir(__dirname + '/public', (err, files) => {
-//     //     if(!files)
-//     //         files = []
-//     //     ws.send(JSON.stringify(
-//     //         {
-//     //             'type':'playlist',
-//     //             'message': files
-//     //         }
-//     //         ))
-//     // })
-// }
-
-// function yellPlaylist() {
-//     wss.clients.forEach((client) => {
-//         whisperPlaylist(client)
-//     });
-// }
-
-// function yellPlay(filename) {
-//     wss.clients.forEach((client) => {
-//         client.send(JSON.stringify(
-//             {
-//                 'type':'play',
-//                 'message': filename
-//             }))
-//     });
-// }
-
-// function yellUserCount() {
-//     wss.clients.forEach((ws) => {
-//         ws.send(JSON.stringify(
-//             {
-//                 'type':'userCount',
-//                 'message': userCount
-//             }
-//             ))
-//       });
-// }
-
-// function yellHangoutsCount() {
-//     wss.clients.forEach((ws) => {
-//         ws.send(JSON.stringify(
-//             {
-//                 'type':'hangoutsCount',
-//                 'message': hangoutsCount
-//             }
-//             ))
-//       });
-// }
