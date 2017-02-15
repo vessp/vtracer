@@ -3,7 +3,6 @@ import axios from 'axios'
 import ReactDOM from 'react-dom'
 import moment from 'moment'
 // import ColorPicker from 'rc-color-picker'
-import Tracer, {register, logv} from '../Tracer'
 
 class Home extends React.Component {
   constructor(props) {
@@ -40,13 +39,6 @@ class Home extends React.Component {
     }
 
     return false
-  }
-
-  componentDidMount() {
-    Tracer.register('ws://localhost:3000', 'com.vessp.app1')
-    setInterval(() => {
-      Tracer.logv('[MyComponent] myTraceMessage-' + Math.random())
-    }, 1000)
   }
 
   componentDidUpdate(prevProps, prevState) {

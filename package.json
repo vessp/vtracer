@@ -33,7 +33,8 @@
     "redux": "^3.6.0",
     "redux-promise-middleware": "^4.2.0",
     "redux-thunk": "^2.2.0",
-    "ws": "^1.1.1"
+    "ws": "^1.1.1",
+    "vtracer-client": "git+https://github.com/vessp/vtracer-client.git"
   },
   "devDependencies": {
     "babel-preset-es2015": "^6.22.0",
