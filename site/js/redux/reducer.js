@@ -4,23 +4,8 @@ const initialState = Immutable.fromJS({
   isSocketConnected: false,
   shouldScrollBottom: true,
   traces: [],
-  bundleQuery: '',
-  filters: [
-    {
-      query: 'message2',
-      queryMode: 'contains',
-      isActive: true,
-      show: null,
-      style:{color: 'blue', background: 'black'},
-    },
-    {
-      query: 'message3',
-      queryMode: 'contains',
-      isActive: true,
-      show: null,
-      style:{color: 'red', background: 'black'},
-    },
-  ],
+  bundleQuery: localStorage['bundleQuery'] || '',
+  filters: JSON.parse(localStorage['filters'] || '[]'),
 })
 
 function appReducer(state = initialState, action) {
@@ -35,6 +20,11 @@ function appReducer(state = initialState, action) {
         state = state.setIn([key], payload[key])
       else
         state = state.mergeIn([key], payload[key])
+
+      if(key == 'bundleQuery')
+        localStorage[key] = state.get('bundleQuery')
+      else if(key == 'filters')
+        localStorage[key] = JSON.stringify(state.get('filters').toJS())
     }
     // console.log('state', state, state.get('filters'), payload)
     return state

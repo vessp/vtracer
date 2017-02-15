@@ -178,31 +178,31 @@ wss.on('connection', (ws) => {
   console.log('Client connected');
   userCount++
 
-  var traceCount = 0
-  const intervalId = setInterval(() => {
-    traceCount++
-    whisper(ws, {
-      'type':'trace',
-      'payload': {
-        bundle: 'com.vessp.app'+traceCount,
-        instant: Date.now(),
-        text:"[MyComponent] myTraceMessage" + traceCount
-      }
-    })
-    // if(traceCount > 3)
-    //   clearInterval(intervalId)
-  }, 1500)
+  // var traceCount = 0
+  // const intervalId = setInterval(() => {
+  //   traceCount++
+  //   whisper(ws, {
+  //     'type':'trace',
+  //     'payload': {
+  //       bundle: 'com.vessp.app'+traceCount,
+  //       instant: Date.now(),
+  //       text:"[MyComponent] myTraceMessage" + traceCount
+  //     }
+  //   })
+  //   // if(traceCount > 3)
+  //   //   clearInterval(intervalId)
+  // }, 1500)
 
   ws.on('close', () => {
       console.log('Client disconnected');
   })
 
   ws.on('message', (jparcel) => {
-      console.log('onmessage: ', parcel)
+      console.log('onmessage: ', jparcel)
       const parcel = JSON.parse(jparcel)
       if(parcel.type == 'trace')
       {
-        // yell(parcel)
+        yell(parcel, ws)
       }
   })
 })
@@ -215,8 +215,11 @@ function whisper(ws, parcel) {
   }
 }
 
-function yell(parcel) {
-  wss.clients.forEach(ws => whisper(ws, parcel))
+function yell(parcel, sendingWs=null) {
+  wss.clients.forEach(ws => {
+    if(ws != sendingWs)
+      whisper(ws, parcel)
+  })
 }
 
 // function whisperVersion(ws){

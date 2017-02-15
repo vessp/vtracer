@@ -1,7 +1,9 @@
 import React from 'react'
 import axios from 'axios'
 import ReactDOM from 'react-dom'
+import moment from 'moment'
 // import ColorPicker from 'rc-color-picker'
+import Tracer, {register, logv} from '../Tracer'
 
 class Home extends React.Component {
   constructor(props) {
@@ -30,9 +32,21 @@ class Home extends React.Component {
           console.log(e)
         }
       }
+      else if(fQueryMode == 'level') {
+        const tLevel = t.get('level')
+        if(tLevel.toLowerCase().indexOf(fQuery.toLowerCase()) != -1)
+          return true
+      }
     }
 
     return false
+  }
+
+  componentDidMount() {
+    Tracer.register('ws://localhost:3000', 'com.vessp.app1')
+    setInterval(() => {
+      Tracer.logv('[MyComponent] myTraceMessage-' + Math.random())
+    }, 1000)
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -45,8 +59,12 @@ class Home extends React.Component {
     if(!this.addedScrollListener) {
       this.addedScrollListener = true
       const ele = ReactDOM.findDOMNode(this.tracesDiv)
-      ele.addEventListener('scroll', e => {
-        console.log('e', e)
+      ele.addEventListener('mousewheel', e => {
+        const height = ele.getBoundingClientRect().height
+        const atBottom = Math.abs((ele.scrollTop + height) - ele.scrollHeight) < 10
+        const shouldScrollBottom = this.props.shouldScrollBottom
+        if(shouldScrollBottom != atBottom)
+          this.props.actions.set({'shouldScrollBottom': atBottom})
       })
     }
   }
@@ -74,9 +92,8 @@ class Home extends React.Component {
       .map(t => {
         const tText = t.get('text')
         activeFilters.forEach(f => {
-          const fQuery = f.get('query')
-          if(fQuery && tText.toLowerCase().indexOf(fQuery.toLowerCase()) != -1) {
-            t = t.merge(f)
+          if(this.selects(f, t)) {
+            t = t.set('style', f.get('style'))
           }
         })
         return t
@@ -89,23 +106,19 @@ class Home extends React.Component {
         <div className='filters'>
 
           <div className='filters-controls'>
-            <input type='text' className='form-control'
-              value={this.props.bundleQuery}
-              onChange={e => actions.setBundleQuery(e.target.value)}/>
-            <button className='btn btn-default' onClick={() => actions.createFilter()}>
-              <i className='fa fa-plus'/>
-            </button>
             <button className='btn btn-default' onClick={() => actions.clearTraces()}>
               <i className='fa fa-ban'/>
             </button>
-            {/*<button className='btn btn-default' onClick={() => axios.post('http://localhost:3000/traces', 
-              {trace:{instant: Date.now(), text:'myPostedTrace'}})}>
-              Send
-            </button>*/}
+            <input type='text' className='form-control'
+              value={this.props.bundleQuery}
+              onChange={e => actions.setBundleQuery(e.target.value)}/>
             {shouldScrollBottom
               ? <button className='btn btn-info' onClick={() => actions.set({'shouldScrollBottom': false})}><i className='fa fa-hand-o-down'/></button>
-              : <button className='btn btn-default' onClick={() => actions.set({'shouldScrollBottom': true})}><i className='fa fa-hand-paper-o'/></button>
+              : <button className='btn btn-danger' onClick={() => actions.set({'shouldScrollBottom': true})}><i className='fa fa-hand-paper-o'/></button>
             }
+            <button className='btn btn-default' onClick={() => actions.createFilter()}>
+              <i className='fa fa-plus'/>
+            </button>
           </div>
           
           {filters.map((filter, i) => {
@@ -113,17 +126,20 @@ class Home extends React.Component {
             return (
               <div key={i} className='filter'>
                 {filter.get('isActive')
-                  ? <button className='btn btn-info' onClick={() => mod(filter.set('isActive', false))}>On</button>
-                  : <button className='btn btn-default' onClick={() => mod(filter.set('isActive', true))}>Off</button>
+                  ? <button className='btn btn-info' onClick={() => mod(filter.set('isActive', false))}><i className='fa fa-circle'/></button>
+                  : <button className='btn btn-default' onClick={() => mod(filter.set('isActive', true))}><i className='fa fa-circle-o'/></button>
                 }
                 <input className='form-control' type='text' value={filter.get('query') || ''}
                   onChange={e => mod(filter.set('query', e.target.value))}
                   />
                 {filter.get('queryMode') == 'contains' &&
-                  <button className="btn btn-default" onClick={() => mod(filter.set('queryMode', 'regex'))}>C</button>
+                  <button className="btn btn-default" onClick={() => mod(filter.set('queryMode', 'level'))}>P</button>
+                }
+                {filter.get('queryMode') == 'level' &&
+                  <button className="btn btn-success" onClick={() => mod(filter.set('queryMode', 'regex'))}>L</button>
                 }
                 {filter.get('queryMode') == 'regex' &&
-                  <button className="btn btn-info" onClick={() => mod(filter.set('queryMode', 'contains'))}>R</button>
+                  <button className="btn btn-danger" onClick={() => mod(filter.set('queryMode', 'contains'))}>R</button>
                 }
                 {filter.get('show') == true &&
                   <button className="btn btn-success" onClick={() => mod(filter.set('show', false))}>S</button>
@@ -132,12 +148,12 @@ class Home extends React.Component {
                   <button className="btn btn-danger" onClick={() => mod(filter.set('show', null))}>H</button>
                 }
                 {filter.get('show') == null &&
-                  <button className="btn btn-default" onClick={() => mod(filter.set('show', true))}>&nbsp;&nbsp;</button>
+                  <button className="btn btn-default" onClick={() => mod(filter.set('show', true))}>--</button>
                 }
-                <input className='form-control' type='text' value={filter.getIn(['style', 'color']) || ''}
+                <input className='form-control style-control' type='text' value={filter.getIn(['style', 'color']) || ''}
                   onChange={e => mod(filter.setIn(['style', 'color'], e.target.value))}
                   />
-                <input className='form-control' type='text' value={filter.getIn(['style', 'background']) || ''}
+                <input className='form-control style-control' type='text' value={filter.getIn(['style', 'background']) || ''}
                   onChange={e => mod(filter.setIn(['style', 'background'], e.target.value))}
                   />
                 <button className='btn btn-default' onClick={() => actions.swapFilters(i, i-1)}>
@@ -157,10 +173,16 @@ class Home extends React.Component {
           {filteredTraces.map((trace, i) => {
             const style = trace.get('style') ? trace.get('style').toJS() : {}
 
+            const timestamp = moment(trace.get('instant')).format('YYYY-MM-DD HH:mm:ss')
+            const level = trace.get('level')
+            const text = trace.get('text')
+
             return (
-              <button className='trace' key={i} type="button"
-                style={style} title={trace.get('bundle')}>
-                {trace.get('text')}
+              <button className={'trace ' + level} key={i} type="button"
+                style={{background:style.background}} title={trace.get('bundle')}>
+                <span className='trace-timestamp'>{timestamp}</span>
+                <span className='trace-level'>{level.toUpperCase()}</span>
+                <span className='trace-text' style={{color:style.color}}>{text}</span>
               </button>
             )
           })}
