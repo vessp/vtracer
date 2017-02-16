@@ -20,7 +20,9 @@ export const doSocketConnect = asyncAction(() => {
   }
   webSocket.onclose = (event) => {
     send('isSocketConnected', false)
-    dispatch(doSocketConnect())
+    setTimeout(() => {
+      dispatch(doSocketConnect())
+    }, 5000)
   }
   webSocket.onmessage = (event) => {
     const jparcel = event.data
@@ -32,7 +34,7 @@ export const doSocketConnect = asyncAction(() => {
     }
   }
   webSocket.onerror = (event) => {
-    console.err('Socket Error: ' + JSON.stringify(event))
+    console.log('Socket Error: ' + JSON.stringify(event))
   }
 })
 
