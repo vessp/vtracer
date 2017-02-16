@@ -63,7 +63,7 @@ app.post('/traces', function(req, res) {
 })
 
 app.get('/env', function(req, res) {
-  res.end('asdf' + process.env.NPM_CONFIG_PRODUCTION)
+  res.end('asdf   ' + process.env.NODE_ENV)
 })
 
 // app.post('/upload', function(req,res){
