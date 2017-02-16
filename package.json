@@ -5,9 +5,7 @@
   "main": "./server/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node ./server/server.js",
-    "start-dev": "cross-env NODE_ENV=development npm start",
-    "push-heroku": "git push heroku master"
+    "start": "node ./server/server.js"
   },
   "keywords": [],
   "author": "",

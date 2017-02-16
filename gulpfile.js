@@ -27,13 +27,19 @@ const BIN_FOLDER = './site/bin'
 const WATCHED_JS_FILES = './site/js/**/*.js'
 const WATCHED_SCSS_FILES = './site/scss/**/*.scss'
 
-function isProduction() {
-    return process.env.NODE_ENV == 'production'
+
+//----------------
+const config = () => {
+    const NODE_ENV = process.env.NODE_ENV
+    return {
+        NODE_ENV: NODE_ENV,
+        isProduction: NODE_ENV == 'production',
+        isDevelopment: NODE_ENV == 'development',
+    }
 }
+//----------------
 
 gulp.task('js', function() {
-    console.log('env', process.env.NODE_ENV, isProduction())
-
     const bundler = browserify(JS_ROOT, { debug: true })
         .transform(babelify, { 
             "presets": ["es2015", 'react'] //these require npm packages babel-preset-es2015, babel-preset-react
@@ -43,12 +49,13 @@ gulp.task('js', function() {
             return 'Error: ' + error.message
         }))
         .pipe(source('bundle.js'))
+        .pipe(replace('gulp-replace-process-env-node-env', process.env.NODE_ENV))
         .pipe(buffer())
         .pipe(sourcemaps.init({ loadMaps: true }))
         .pipe(sourcemaps.write('./'))
         .pipe(gulp.dest(BIN_FOLDER))
 
-    if(!isProduction())
+    if(config().isDevelopment)
         bundle.pipe(livereload())
 
     return bundle
@@ -76,14 +83,15 @@ gulp.task('css', function() {
         }))
         .pipe(gulp.dest(BIN_FOLDER))
 
-    if(!isProduction())
+    if(config().isDevelopment)
         bundle.pipe(livereload())
 
     return bundle
 })
 
 gulp.task('watch', function() {
-    // livereload.listen();
+    if(config().isDevelopment)
+        livereload.listen()
 
     watch(WATCHED_JS_FILES, function(files) {
         runSequence('js')
@@ -96,17 +104,16 @@ gulp.task('watch', function() {
     return runSequence('js', 'css')
 })
 
-gulp.task('start', shell.task([
-    'npm install',
-    'npm run start',
-]))
-
-gulp.task('start-dev', function() {
-
-    shell.task([
-        // 'npm install',
-        'npm run start-dev',
-    ])()
+gulp.task('start', function() {
+    process.env.NODE_ENV = 'production'
+    runSequence('js', 'css')
+    shell.task(['npm run start'])()
 })
 
-gulp.task('default', ['watch', 'start-dev'])
+gulp.task('start-dev', function() {
+    process.env.NODE_ENV = 'development'
+    runSequence('watch')
+    shell.task(['npm run start'])()
+})
+
+gulp.task('default', ['start-dev'])

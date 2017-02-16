@@ -3,9 +3,16 @@
 const express = require('express')
 const path = require('path')
 
-const isProduction = process.env.NODE_ENV == 'production'
+//----------------
+const NODE_ENV = process.env.NODE_ENV
+const config = {
+    NODE_ENV: NODE_ENV,
+    isProduction: NODE_ENV == 'production',
+    isDevelopment: NODE_ENV == 'development',
+}
+//----------------
 
-if(!isProduction) {
+if(config.isDevelopment) {
   if (!require("piping")("./server/server.js")) { return }
 }
 
@@ -43,8 +50,21 @@ app.post('/traces', function(req, res) {
     });
 })
 
+app.get('/test', function(req, res) {
+  yell({
+    type:'trace',
+    payload: {
+      bundle: 'com.foo.bar',
+      instant: Date.now(),
+      level: 'v',
+      text: 'test trace'
+    }
+  })
+  res.end('success')
+})
+
 app.get('/env', function(req, res) {
-  res.end('asdf   ' + process.env.NODE_ENV + ', ' + isProduction)
+  res.end('config: ' + JSON.stringify(config, null, 2))
 })
 
 const server = app.listen(PORT, () => {
