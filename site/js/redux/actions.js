@@ -6,11 +6,11 @@ const get = (...getIn) => getState('app', ...getIn)
 const send = tightenDispatch('cheekySet')
 
 let webSocket = null
+let numConnectFails = 0
 
 //----------------------------------------------------------------
 export const init = asyncAction(() => {
-
-  console.log('config', config)
+  // console.log('config', config)
 
   if(config.isDevelopment) {
     document.write('<script src="http://' + (location.host || 'localhost').split(':')[0] +
@@ -25,13 +25,20 @@ export const doSocketConnect = asyncAction(() => {
     webSocket = new WebSocket('ws://' + location.host)
 
   webSocket.onopen = (event) => {
+    numConnectFails = 0
     send('isSocketConnected', true)
   }
   webSocket.onclose = (event) => {
+    numConnectFails++
     send('isSocketConnected', false)
-    setTimeout(() => {
-      dispatch(doSocketConnect())
-    }, 10000)
+
+    if(numConnectFails <= 6){
+      setTimeout(() => {
+        dispatch(doSocketConnect())
+      }, 30000)
+    } else {
+      console.log('retry connection count exceeded, refresh the page to try again')
+    }
   }
   webSocket.onmessage = (event) => {
     const jparcel = event.data
