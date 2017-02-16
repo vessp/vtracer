@@ -22,7 +22,7 @@ export const init = asyncAction(() => {
 
 export const doSocketConnect = asyncAction(() => {
   // if(!webSocket)
-    webSocket = new WebSocket('ws://' + location.host)
+    webSocket = new WebSocket((location.protocol == 'https:'?'wss:':'ws:') + '//' + location.host)
 
   webSocket.onopen = (event) => {
     numConnectFails = 0
