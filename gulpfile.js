@@ -104,9 +104,14 @@ gulp.task('watch', function() {
     return runSequence('js', 'css')
 })
 
+//used for production
+gulp.task('build', function() {
+    runSequence('js', 'css')
+})
+
 gulp.task('start', function() {
     process.env.NODE_ENV = 'production'
-    runSequence('js', 'css')
+    runSequence('build')
     shell.task(['npm run start'])()
 })
 
