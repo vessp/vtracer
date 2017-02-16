@@ -62,6 +62,10 @@ app.post('/traces', function(req, res) {
     });
 })
 
+app.get('/env', function(req, res) {
+  res.end('asdf' + process.env.NPM_CONFIG_PRODUCTION)
+})
+
 // app.post('/upload', function(req,res){
 
 //     console.log(req.raw)
