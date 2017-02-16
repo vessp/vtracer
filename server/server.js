@@ -1,5 +1,12 @@
 'use strict'
 
+
+
+//TODO, post a trace, filter query match bundle, collapse/expand filter div
+
+
+
+
 const express = require('express')
 const path = require('path')
 
