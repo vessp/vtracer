@@ -52,7 +52,7 @@ function doConnect() {
     }
   };
   webSocket.onclose = function (event) {
-    selfLog('vtracer websocket.onclose ' + JSON.stringify(event));
+    selfLog('vtracer websocket.onclose ' + event.message);
     isConnecting = false;
     _isConnected = false;
 
@@ -63,7 +63,7 @@ function doConnect() {
   // }
   webSocket.onerror = function (event) {
     isConnecting = false;
-    selfLog('vtracer Socket Error: ' + JSON.stringify(event));
+    selfLog('vtracer Socket Error: ' + event.message);
   };
 }
 
