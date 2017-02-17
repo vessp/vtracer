@@ -89,6 +89,28 @@ export function loge(message) {
   send(message, 'e')
 }
 
+export function v(message) {
+  logv(message)
+}
+
+export function d(message) {
+  logd(message)
+}
+
+export function i(message) {
+  logi(message)
+}
+
+export function w(message) {
+  logw(message)
+}
+
+export function e(message) {
+  loge(message)
+}
+
 export default {
-  register, logv, logd, logi, logw, loge
+  register,
+  logv, logd, logi, logw, loge,
+  v, d, i, w, e,
 }
