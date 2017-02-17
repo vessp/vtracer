@@ -4,12 +4,17 @@ let webSocket = null
 let isConnected = false
 let isConnecting = false
 let lastSendInstant = 0
-let pendingMessages = []
+let pendingTraces = []
 
 let _url = null
 let _bundle = null
 
 function doConnect() {
+  if(_url == null) {
+    console.log('vtracer error: cannot connect because url is null')
+    return
+  }
+
   isConnected = false
   isConnecting = true
   webSocket = new WebSocket(_url)
@@ -17,10 +22,10 @@ function doConnect() {
   webSocket.onopen = (event) => {
     isConnecting = false
     isConnected = true
-    while(pendingMessages.length > 0) {
+    while(pendingTraces.length > 0) {
       if(!isConnected) break
-      const message = pendingMessages.splice(0,1)[0] //splice preserves the array object with an element missing, so i dont need to reassign
-      _send(message)
+      const jtrace = pendingTraces.splice(0,1)[0] //splice preserves the array object with an element missing, so i dont need to reassign
+      _send(jtrace)
     }
   }
   webSocket.onclose = (event) => {
@@ -39,34 +44,38 @@ function doConnect() {
   }
 }
 
-function send(text, level) {
+function send(level, ...messages) {
   const parcel = {
     'type': 'trace',
     'payload': {
       bundle: _bundle,
       instant: Date.now(),
       level: level,
-      text: text,
+      text: messages.join(', '),
     }
   }
-  const message = JSON.stringify(parcel)
-  _send(message)
+
+  const jtrace = JSON.stringify(parcel)
+  _send(jtrace)
 }
 
-function _send(message) {
+function _send(jtrace) {
   if(isConnected) {
-    webSocket.send(message)
+    webSocket.send(jtrace)
   }
   else {
-    pendingMessages.push(message)
+    pendingTraces.push(jtrace)
     if(!isConnecting)doConnect()
   }
   lastSendInstant = Date.now()
 }
 
-export function register(url, bundle) {
-  _url = url
-  _bundle = bundle
+export function setConfig(config) {
+  if(!config.url)
+    console.log('vtracer error: config.url is null')
+
+  _url = config.url
+  _bundle = config.bundle
   doConnect()
 }
 
@@ -74,44 +83,44 @@ export function isConnected() {
   return isConnected
 }
 
-export function logv(message) {
-  send(message, 'v')
+export function logv(...messages) {
+  send('v', ...messages)
 }
 
-export function logd(message) {
-  send(message, 'd')
+export function logd(...messages) {
+  send('d', ...messages)
 }
 
-export function logi(message) {
-  send(message, 'i')
+export function logi(...messages) {
+  send('i', ...messages)
 }
 
-export function logw(message) {
-  send(message, 'w')
+export function logw(...messages) {
+  send('w', ...messages)
 }
 
-export function loge(message) {
-  send(message, 'e')
+export function loge(...messages) {
+  send('e', ...messages)
 }
 
-export function v(message) {
-  logv(message)
+export function v(...messages) {
+  logv(...messages)
 }
 
-export function d(message) {
-  logd(message)
+export function d(...messages) {
+  logd(...messages)
 }
 
-export function i(message) {
-  logi(message)
+export function i(...messages) {
+  logi(...messages)
 }
 
-export function w(message) {
-  logw(message)
+export function w(...messages) {
+  logw(...messages)
 }
 
-export function e(message) {
-  loge(message)
+export function e(...messages) {
+  loge(...messages)
 }
 
 export default {

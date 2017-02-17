@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.register = register;
+exports.setConfig = setConfig;
 exports.isConnected = isConnected;
 exports.logv = logv;
 exports.logd = logd;
@@ -19,12 +19,17 @@ var webSocket = null;
 var isConnected = false;
 var isConnecting = false;
 var lastSendInstant = 0;
-var pendingMessages = [];
+var pendingTraces = [];
 
 var _url = null;
 var _bundle = null;
 
 function doConnect() {
+  if (_url == null) {
+    console.log('vtracer error: cannot connect because url is null');
+    return;
+  }
+
   exports.isConnected = isConnected = false;
   isConnecting = true;
   webSocket = new WebSocket(_url);
@@ -32,10 +37,10 @@ function doConnect() {
   webSocket.onopen = function (event) {
     isConnecting = false;
     exports.isConnected = isConnected = true;
-    while (pendingMessages.length > 0) {
+    while (pendingTraces.length > 0) {
       if (!isConnected) break;
-      var message = pendingMessages.splice(0, 1)[0]; //splice preserves the array object with an element missing, so i dont need to reassign
-      _send(message);
+      var jtrace = pendingTraces.splice(0, 1)[0]; //splice preserves the array object with an element missing, so i dont need to reassign
+      _send(jtrace);
     }
   };
   webSocket.onclose = function (event) {
@@ -53,33 +58,40 @@ function doConnect() {
   };
 }
 
-function send(text, level) {
+function send(level) {
+  for (var _len = arguments.length, messages = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    messages[_key - 1] = arguments[_key];
+  }
+
   var parcel = {
     'type': 'trace',
     'payload': {
       bundle: _bundle,
       instant: Date.now(),
       level: level,
-      text: text
+      text: messages.join(', ')
     }
   };
-  var message = JSON.stringify(parcel);
-  _send(message);
+
+  var jtrace = JSON.stringify(parcel);
+  _send(jtrace);
 }
 
-function _send(message) {
+function _send(jtrace) {
   if (isConnected) {
-    webSocket.send(message);
+    webSocket.send(jtrace);
   } else {
-    pendingMessages.push(message);
+    pendingTraces.push(jtrace);
     if (!isConnecting) doConnect();
   }
   lastSendInstant = Date.now();
 }
 
-function register(url, bundle) {
-  _url = url;
-  _bundle = bundle;
+function setConfig(config) {
+  if (!config.url) console.log('vtracer error: config.url is null');
+
+  _url = config.url;
+  _bundle = config.bundle;
   doConnect();
 }
 
@@ -87,44 +99,64 @@ function isConnected() {
   return isConnected;
 }
 
-function logv(message) {
-  send(message, 'v');
+function logv() {
+  for (var _len2 = arguments.length, messages = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+    messages[_key2] = arguments[_key2];
+  }
+
+  send.apply(undefined, ['v'].concat(messages));
 }
 
-function logd(message) {
-  send(message, 'd');
+function logd() {
+  for (var _len3 = arguments.length, messages = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
+    messages[_key3] = arguments[_key3];
+  }
+
+  send.apply(undefined, ['d'].concat(messages));
 }
 
-function logi(message) {
-  send(message, 'i');
+function logi() {
+  for (var _len4 = arguments.length, messages = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
+    messages[_key4] = arguments[_key4];
+  }
+
+  send.apply(undefined, ['i'].concat(messages));
 }
 
-function logw(message) {
-  send(message, 'w');
+function logw() {
+  for (var _len5 = arguments.length, messages = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
+    messages[_key5] = arguments[_key5];
+  }
+
+  send.apply(undefined, ['w'].concat(messages));
 }
 
-function loge(message) {
-  send(message, 'e');
+function loge() {
+  for (var _len6 = arguments.length, messages = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
+    messages[_key6] = arguments[_key6];
+  }
+
+  send.apply(undefined, ['e'].concat(messages));
 }
 
-function v(message) {
-  logv(message);
+function v() {
+  logv.apply(undefined, arguments);
 }
 
-function d(message) {
-  logd(message);
+function d() {
+  logd.apply(undefined, arguments);
 }
 
-function i(message) {
-  logi(message);
+function i() {
+  logi.apply(undefined, arguments);
 }
 
-function w(message) {
-  logw(message);
+function w() {
+  logw.apply(undefined, arguments);
 }
 
-function e(message) {
-  loge(message);
+function e() {
+  loge.apply(undefined, arguments);
 }
 
 exports.default = {
