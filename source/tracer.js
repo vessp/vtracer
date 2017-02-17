@@ -33,8 +33,8 @@ function doConnect() {
     isConnecting = false
     isConnected = true
 
-    if(onConnectedMessage)
-      logv(onConnectedMessage)
+    if(_config.onConnectedMessage)
+      logv(_config.onConnectedMessage)
 
     while(pendingTraces.length > 0) {
       if(!isConnected) break
