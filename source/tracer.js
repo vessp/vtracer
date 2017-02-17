@@ -79,10 +79,6 @@ export function setConfig(config) {
   doConnect()
 }
 
-export function isConnected() {
-  return isConnected
-}
-
 export function logv(...messages) {
   send('v', ...messages)
 }
@@ -124,7 +120,7 @@ export function e(...messages) {
 }
 
 export default {
-  setConfig, isConnected,
+  setConfig, isConnected:() => isConnected,
   logv, logd, logi, logw, loge,
   v, d, i, w, e,
 }
