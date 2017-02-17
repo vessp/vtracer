@@ -4,11 +4,17 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.register = register;
+exports.isConnected = isConnected;
 exports.logv = logv;
 exports.logd = logd;
 exports.logi = logi;
 exports.logw = logw;
 exports.loge = loge;
+exports.v = v;
+exports.d = d;
+exports.i = i;
+exports.w = w;
+exports.e = e;
 var webSocket = null;
 var isConnected = false;
 var isConnecting = false;
@@ -19,12 +25,13 @@ var _url = null;
 var _bundle = null;
 
 function doConnect() {
+  exports.isConnected = isConnected = false;
   isConnecting = true;
   webSocket = new WebSocket(_url);
 
   webSocket.onopen = function (event) {
     isConnecting = false;
-    isConnected = true;
+    exports.isConnected = isConnected = true;
     while (pendingMessages.length > 0) {
       if (!isConnected) break;
       var message = pendingMessages.splice(0, 1)[0]; //splice preserves the array object with an element missing, so i dont need to reassign
@@ -33,7 +40,7 @@ function doConnect() {
   };
   webSocket.onclose = function (event) {
     isConnecting = false;
-    isConnected = false;
+    exports.isConnected = isConnected = false;
 
     if (Date.now() - lastSendInstant < 1000 * 60 * 5) doConnect();
   };
@@ -76,6 +83,10 @@ function register(url, bundle) {
   doConnect();
 }
 
+function isConnected() {
+  return isConnected;
+}
+
 function logv(message) {
   send(message, 'v');
 }
@@ -96,6 +107,28 @@ function loge(message) {
   send(message, 'e');
 }
 
+function v(message) {
+  logv(message);
+}
+
+function d(message) {
+  logd(message);
+}
+
+function i(message) {
+  logi(message);
+}
+
+function w(message) {
+  logw(message);
+}
+
+function e(message) {
+  loge(message);
+}
+
 exports.default = {
-  register: register, logv: logv, logd: logd, logi: logi, logw: logw, loge: loge
+  register: register, isConnected: isConnected,
+  logv: logv, logd: logd, logi: logi, logw: logw, loge: loge,
+  v: v, d: d, i: i, w: w, e: e
 };
