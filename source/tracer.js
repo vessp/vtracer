@@ -90,10 +90,10 @@ export function setConfig(config) {
     selfLog('vtracer warning: config.serverUrl=' + config.serverUrl)
 
   _config = {}
-  for(key in defaultConfig) {
+  for(let key in defaultConfig) {
     _config[key] = defaultConfig[key]
   }
-  for(key in config) {
+  for(let key in config) {
     _config[key] = config[key]
   }
   doConnect()

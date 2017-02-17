@@ -100,50 +100,50 @@ function setConfig(config) {
   if (!config.serverUrl) selfLog('vtracer warning: config.serverUrl=' + config.serverUrl);
 
   _config = {};
-  for (key in defaultConfig) {
+  for (var key in defaultConfig) {
     _config[key] = defaultConfig[key];
   }
-  for (key in config) {
-    _config[key] = config[key];
+  for (var _key2 in config) {
+    _config[_key2] = config[_key2];
   }
   doConnect();
 }
 
 function logv() {
-  for (var _len2 = arguments.length, messages = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-    messages[_key2] = arguments[_key2];
+  for (var _len2 = arguments.length, messages = Array(_len2), _key3 = 0; _key3 < _len2; _key3++) {
+    messages[_key3] = arguments[_key3];
   }
 
   send.apply(undefined, ['v'].concat(messages));
 }
 
 function logd() {
-  for (var _len3 = arguments.length, messages = Array(_len3), _key3 = 0; _key3 < _len3; _key3++) {
-    messages[_key3] = arguments[_key3];
+  for (var _len3 = arguments.length, messages = Array(_len3), _key4 = 0; _key4 < _len3; _key4++) {
+    messages[_key4] = arguments[_key4];
   }
 
   send.apply(undefined, ['d'].concat(messages));
 }
 
 function logi() {
-  for (var _len4 = arguments.length, messages = Array(_len4), _key4 = 0; _key4 < _len4; _key4++) {
-    messages[_key4] = arguments[_key4];
+  for (var _len4 = arguments.length, messages = Array(_len4), _key5 = 0; _key5 < _len4; _key5++) {
+    messages[_key5] = arguments[_key5];
   }
 
   send.apply(undefined, ['i'].concat(messages));
 }
 
 function logw() {
-  for (var _len5 = arguments.length, messages = Array(_len5), _key5 = 0; _key5 < _len5; _key5++) {
-    messages[_key5] = arguments[_key5];
+  for (var _len5 = arguments.length, messages = Array(_len5), _key6 = 0; _key6 < _len5; _key6++) {
+    messages[_key6] = arguments[_key6];
   }
 
   send.apply(undefined, ['w'].concat(messages));
 }
 
 function loge() {
-  for (var _len6 = arguments.length, messages = Array(_len6), _key6 = 0; _key6 < _len6; _key6++) {
-    messages[_key6] = arguments[_key6];
+  for (var _len6 = arguments.length, messages = Array(_len6), _key7 = 0; _key7 < _len6; _key7++) {
+    messages[_key7] = arguments[_key7];
   }
 
   send.apply(undefined, ['e'].concat(messages));
