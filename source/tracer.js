@@ -124,7 +124,7 @@ export function e(...messages) {
 }
 
 export default {
-  register, isConnected,
+  setConfig, isConnected,
   logv, logd, logi, logw, loge,
   v, d, i, w, e,
 }

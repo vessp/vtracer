@@ -160,7 +160,7 @@ function e() {
 }
 
 exports.default = {
-  register: register, isConnected: isConnected,
+  setConfig: setConfig, isConnected: isConnected,
   logv: logv, logd: logd, logi: logi, logw: logw, loge: loge,
   v: v, d: d, i: i, w: w, e: e
 };
