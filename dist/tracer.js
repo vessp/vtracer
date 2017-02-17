@@ -9,33 +9,42 @@ exports.logd = logd;
 exports.logi = logi;
 exports.logw = logw;
 exports.loge = loge;
-exports.v = v;
-exports.d = d;
-exports.i = i;
-exports.w = w;
-exports.e = e;
 var webSocket = null;
 var _isConnected = false;
 var isConnecting = false;
 var lastSendInstant = 0;
 var pendingTraces = [];
 
-var _url = null;
-var _bundle = null;
+var defaultConfig = {
+  serverUrl: null,
+  bundle: '',
+  onConnectedMessage: null,
+  debug: true
+};
+var _config = defaultConfig;
+
+function selfLog() {
+  var _console;
+
+  if (_config.debug) (_console = console).log.apply(_console, arguments);
+}
 
 function doConnect() {
-  if (_url == null) {
-    console.log('vtracer error: cannot connect because url is null');
+  if (_config.serverUrl == null) {
+    selfLog('vtracer error: cannot connect because _config.serverUrl is null');
     return;
   }
 
   _isConnected = false;
   isConnecting = true;
-  webSocket = new WebSocket(_url);
+  webSocket = new WebSocket(_config.serverUrl);
 
   webSocket.onopen = function (event) {
     isConnecting = false;
     _isConnected = true;
+
+    if (onConnectedMessage) logv(onConnectedMessage);
+
     while (pendingTraces.length > 0) {
       if (!_isConnected) break;
       var jtrace = pendingTraces.splice(0, 1)[0]; //splice preserves the array object with an element missing, so i dont need to reassign
@@ -43,6 +52,7 @@ function doConnect() {
     }
   };
   webSocket.onclose = function (event) {
+    selfLog('vtracer websocket.onclose ' + JSON.stringify(event));
     isConnecting = false;
     _isConnected = false;
 
@@ -53,7 +63,7 @@ function doConnect() {
   // }
   webSocket.onerror = function (event) {
     isConnecting = false;
-    console.err('Socket Error: ' + JSON.stringify(event));
+    selfLog('vtracer Socket Error: ' + JSON.stringify(event));
   };
 }
 
@@ -65,7 +75,7 @@ function send(level) {
   var parcel = {
     'type': 'trace',
     'payload': {
-      bundle: _bundle,
+      bundle: _config.bundle,
       instant: Date.now(),
       level: level,
       text: messages.join(', ')
@@ -87,10 +97,15 @@ function _send(jtrace) {
 }
 
 function setConfig(config) {
-  if (!config.url) console.log('vtracer error: config.url is null');
+  if (!config.serverUrl) selfLog('vtracer warning: config.serverUrl=' + config.serverUrl);
 
-  _url = config.url;
-  _bundle = config.bundle;
+  _config = {};
+  for (key in defaultConfig) {
+    _config[key] = defaultConfig[key];
+  }
+  for (key in config) {
+    _config[key] = config[key];
+  }
   doConnect();
 }
 
@@ -134,30 +149,24 @@ function loge() {
   send.apply(undefined, ['e'].concat(messages));
 }
 
-function v() {
-  logv.apply(undefined, arguments);
-}
-
-function d() {
-  logd.apply(undefined, arguments);
-}
-
-function i() {
-  logi.apply(undefined, arguments);
-}
-
-function w() {
-  logw.apply(undefined, arguments);
-}
-
-function e() {
-  loge.apply(undefined, arguments);
-}
-
 exports.default = {
   setConfig: setConfig, isConnected: function isConnected() {
     return _isConnected;
   },
   logv: logv, logd: logd, logi: logi, logw: logw, loge: loge,
-  v: v, d: d, i: i, w: w, e: e
+  v: function v() {
+    return logv.apply(undefined, arguments);
+  },
+  d: function d() {
+    return logd.apply(undefined, arguments);
+  },
+  i: function i() {
+    return logi.apply(undefined, arguments);
+  },
+  w: function w() {
+    return logw.apply(undefined, arguments);
+  },
+  e: function e() {
+    return loge.apply(undefined, arguments);
+  }
 };

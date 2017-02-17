@@ -6,22 +6,36 @@ let isConnecting = false
 let lastSendInstant = 0
 let pendingTraces = []
 
-let _url = null
-let _bundle = null
+let defaultConfig = {
+  serverUrl: null,
+  bundle: '',
+  onConnectedMessage: null,
+  debug: true
+}
+let _config = defaultConfig
+
+function selfLog(...args) {
+  if(_config.debug)
+    console.log(...args)
+}
 
 function doConnect() {
-  if(_url == null) {
-    console.log('vtracer error: cannot connect because url is null')
+  if(_config.serverUrl == null) {
+    selfLog('vtracer error: cannot connect because _config.serverUrl is null')
     return
   }
 
   isConnected = false
   isConnecting = true
-  webSocket = new WebSocket(_url)
+  webSocket = new WebSocket(_config.serverUrl)
 
   webSocket.onopen = (event) => {
     isConnecting = false
     isConnected = true
+
+    if(onConnectedMessage)
+      logv(onConnectedMessage)
+
     while(pendingTraces.length > 0) {
       if(!isConnected) break
       const jtrace = pendingTraces.splice(0,1)[0] //splice preserves the array object with an element missing, so i dont need to reassign
@@ -29,6 +43,7 @@ function doConnect() {
     }
   }
   webSocket.onclose = (event) => {
+    selfLog('vtracer websocket.onclose ' + JSON.stringify(event))
     isConnecting = false
     isConnected = false
 
@@ -40,7 +55,7 @@ function doConnect() {
   // }
   webSocket.onerror = (event) => {
     isConnecting = false
-    console.err('Socket Error: ' + JSON.stringify(event))
+    selfLog('vtracer Socket Error: ' + JSON.stringify(event))
   }
 }
 
@@ -48,7 +63,7 @@ function send(level, ...messages) {
   const parcel = {
     'type': 'trace',
     'payload': {
-      bundle: _bundle,
+      bundle: _config.bundle,
       instant: Date.now(),
       level: level,
       text: messages.join(', '),
@@ -71,11 +86,16 @@ function _send(jtrace) {
 }
 
 export function setConfig(config) {
-  if(!config.url)
-    console.log('vtracer error: config.url is null')
+  if(!config.serverUrl)
+    selfLog('vtracer warning: config.serverUrl=' + config.serverUrl)
 
-  _url = config.url
-  _bundle = config.bundle
+  _config = {}
+  for(key in defaultConfig) {
+    _config[key] = defaultConfig[key]
+  }
+  for(key in config) {
+    _config[key] = config[key]
+  }
   doConnect()
 }
 
@@ -99,28 +119,12 @@ export function loge(...messages) {
   send('e', ...messages)
 }
 
-export function v(...messages) {
-  logv(...messages)
-}
-
-export function d(...messages) {
-  logd(...messages)
-}
-
-export function i(...messages) {
-  logi(...messages)
-}
-
-export function w(...messages) {
-  logw(...messages)
-}
-
-export function e(...messages) {
-  loge(...messages)
-}
-
 export default {
   setConfig, isConnected:() => isConnected,
   logv, logd, logi, logw, loge,
-  v, d, i, w, e,
+  v: (...args) => logv(...args),
+  d: (...args) => logd(...args),
+  i: (...args) => logi(...args),
+  w: (...args) => logw(...args),
+  e: (...args) => loge(...args),
 }
