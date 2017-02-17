@@ -10,6 +10,7 @@ let _url = null
 let _bundle = null
 
 function doConnect() {
+  isConnected = false
   isConnecting = true
   webSocket = new WebSocket(_url)
 
@@ -69,6 +70,10 @@ export function register(url, bundle) {
   doConnect()
 }
 
+export function isConnected() {
+  return isConnected
+}
+
 export function logv(message) {
   send(message, 'v')
 }
@@ -110,7 +115,7 @@ export function e(message) {
 }
 
 export default {
-  register,
+  register, isConnected,
   logv, logd, logi, logw, loge,
   v, d, i, w, e,
 }
