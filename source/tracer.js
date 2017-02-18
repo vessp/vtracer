@@ -43,7 +43,7 @@ function doConnect() {
     }
   }
   webSocket.onclose = (event) => {
-    selfLog('vtracer websocket.onclose ' + event.message)
+    selfLog('vtracer websocket.onclose, code=' + event.code + ', reason=' + event.reason)
     isConnecting = false
     isConnected = false
 
@@ -55,7 +55,7 @@ function doConnect() {
   // }
   webSocket.onerror = (event) => {
     isConnecting = false
-    selfLog('vtracer Socket Error: ' + event.message)
+    selfLog('vtracer Socket Error: ' + event)
   }
 }
 
