@@ -52,18 +52,20 @@ function doConnect() {
     }
   };
   webSocket.onclose = function (event) {
-    selfLog('vtracer websocket.onclose ' + event.message);
+    selfLog('vtracer websocket.onclose, code=' + event.code + ', reason=' + event.reason);
     isConnecting = false;
     _isConnected = false;
 
-    if (Date.now() - lastSendInstant < 1000 * 60 * 5) doConnect();
+    // if(Date.now() - lastSendInstant < 1000*60*5)
+    //lets try to always be connected for now
+    doConnect();
   };
   // webSocket.onmessage = (event) => {
 
   // }
   webSocket.onerror = function (event) {
     isConnecting = false;
-    selfLog('vtracer Socket Error: ' + event.message);
+    selfLog('vtracer Socket Error: event=' + event);
   };
 }
 

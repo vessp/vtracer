@@ -47,7 +47,8 @@ function doConnect() {
     isConnecting = false
     isConnected = false
 
-    if(Date.now() - lastSendInstant < 1000*60*5)
+    // if(Date.now() - lastSendInstant < 1000*60*5)
+    //lets try to always be connected for now
       doConnect()
   }
   // webSocket.onmessage = (event) => {
@@ -55,7 +56,7 @@ function doConnect() {
   // }
   webSocket.onerror = (event) => {
     isConnecting = false
-    selfLog('vtracer Socket Error: ' + event)
+    selfLog('vtracer Socket Error: event=' + event)
   }
 }
 
