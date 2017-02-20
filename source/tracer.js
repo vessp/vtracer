@@ -5,6 +5,7 @@ let isConnected = false
 let isConnecting = false
 let lastSendInstant = 0
 let pendingTraces = []
+let numFailedConnectAttempts = 0
 
 let defaultConfig = {
   serverUrl: null,
@@ -32,6 +33,7 @@ function doConnect() {
   webSocket.onopen = (event) => {
     isConnecting = false
     isConnected = true
+    numFailedConnectAttempts = 0
 
     if(_config.onConnectedMessage)
       logv(_config.onConnectedMessage)
@@ -46,10 +48,12 @@ function doConnect() {
     selfLog('vtracer websocket.onclose, code=' + event.code + ', reason=' + event.reason)
     isConnecting = false
     isConnected = false
+    numFailedConnectAttempts++
 
     // if(Date.now() - lastSendInstant < 1000*60*5)
     //lets try to always be connected for now
-      doConnect()
+    const timeout = numFailedConnectAttempts <= 1 ? 1000 : 60000
+    setTimeout(() => doConnect(), timeout)
   }
   // webSocket.onmessage = (event) => {
 

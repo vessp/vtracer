@@ -14,6 +14,7 @@ var _isConnected = false;
 var isConnecting = false;
 var lastSendInstant = 0;
 var pendingTraces = [];
+var numFailedConnectAttempts = 0;
 
 var defaultConfig = {
   serverUrl: null,
@@ -42,6 +43,7 @@ function doConnect() {
   webSocket.onopen = function (event) {
     isConnecting = false;
     _isConnected = true;
+    numFailedConnectAttempts = 0;
 
     if (_config.onConnectedMessage) logv(_config.onConnectedMessage);
 
@@ -55,10 +57,14 @@ function doConnect() {
     selfLog('vtracer websocket.onclose, code=' + event.code + ', reason=' + event.reason);
     isConnecting = false;
     _isConnected = false;
+    numFailedConnectAttempts++;
 
     // if(Date.now() - lastSendInstant < 1000*60*5)
     //lets try to always be connected for now
-    doConnect();
+    var timeout = numFailedConnectAttempts <= 1 ? 1000 : 60000;
+    setTimeout(function () {
+      return doConnect();
+    }, timeout);
   };
   // webSocket.onmessage = (event) => {
 
