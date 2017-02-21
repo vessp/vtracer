@@ -16,6 +16,8 @@ var lastSendInstant = 0;
 var pendingTraces = [];
 var numFailedConnectAttempts = 0;
 
+var MAX_PENDING_LENGTH = 100;
+
 var defaultConfig = {
   serverUrl: null,
   bundle: '',
@@ -106,6 +108,7 @@ function _send(jtrace) {
   }
 
   if (!sendSuccessful) {
+    if (pendingTraces.length >= MAX_PENDING_LENGTH) pendingTraces.splice(0, 1); //remove first element
     pendingTraces.push(jtrace);
     if (!_isConnected && !isConnecting) doConnect();
   }

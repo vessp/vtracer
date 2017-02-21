@@ -7,6 +7,8 @@ let lastSendInstant = 0
 let pendingTraces = []
 let numFailedConnectAttempts = 0
 
+const MAX_PENDING_LENGTH = 100
+
 let defaultConfig = {
   serverUrl: null,
   bundle: '',
@@ -89,6 +91,8 @@ function _send(jtrace) {
   }
   
   if(!sendSuccessful) {
+    if(pendingTraces.length >= MAX_PENDING_LENGTH)
+      pendingTraces.splice(0,1) //remove first element
     pendingTraces.push(jtrace)
     if(!isConnected && !isConnecting)
       doConnect()
