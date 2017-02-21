@@ -95,11 +95,19 @@ function send(level) {
 }
 
 function _send(jtrace) {
+  var sendSuccessful = false;
   if (_isConnected) {
-    webSocket.send(jtrace);
-  } else {
+    try {
+      webSocket.send(jtrace);
+      sendSuccessful = true;
+    } catch (e) {
+      selfLog('vtracer send error: event=' + e);
+    }
+  }
+
+  if (!sendSuccessful) {
     pendingTraces.push(jtrace);
-    if (!isConnecting) doConnect();
+    if (!_isConnected && !isConnecting) doConnect();
   }
   lastSendInstant = Date.now();
 }

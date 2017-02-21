@@ -80,12 +80,18 @@ function send(level, ...messages) {
 }
 
 function _send(jtrace) {
+  let sendSuccessful = false
   if(isConnected) {
-    webSocket.send(jtrace)
+    try {
+      webSocket.send(jtrace)
+      sendSuccessful = true
+    } catch(e){selfLog('vtracer send error: event=' + e)}
   }
-  else {
+  
+  if(!sendSuccessful) {
     pendingTraces.push(jtrace)
-    if(!isConnecting)doConnect()
+    if(!isConnected && !isConnecting)
+      doConnect()
   }
   lastSendInstant = Date.now()
 }
