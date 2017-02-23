@@ -52,7 +52,8 @@ function doConnect() {
     while (pendingTraces.length > 0) {
       if (!_isConnected) break;
       var jtrace = pendingTraces.splice(0, 1)[0]; //splice preserves the array object with an element missing, so i dont need to reassign
-      _send(jtrace);
+      var success = _send(jtrace);
+      if (!success) break;
     }
   };
   webSocket.onclose = function (event) {
@@ -113,6 +114,7 @@ function _send(jtrace) {
     if (!_isConnected && !isConnecting) doConnect();
   }
   lastSendInstant = Date.now();
+  return sendSuccessful;
 }
 
 function setConfig(config) {

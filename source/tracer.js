@@ -43,7 +43,9 @@ function doConnect() {
     while(pendingTraces.length > 0) {
       if(!isConnected) break
       const jtrace = pendingTraces.splice(0,1)[0] //splice preserves the array object with an element missing, so i dont need to reassign
-      _send(jtrace)
+      const success = _send(jtrace)
+      if(!success)
+        break
     }
   }
   webSocket.onclose = (event) => {
@@ -87,7 +89,9 @@ function _send(jtrace) {
     try {
       webSocket.send(jtrace)
       sendSuccessful = true
-    } catch(e){selfLog('vtracer send error: event=' + e)}
+    } catch(e){
+      selfLog('vtracer send error: event=' + e)
+    }
   }
   
   if(!sendSuccessful) {
@@ -98,6 +102,7 @@ function _send(jtrace) {
       doConnect()
   }
   lastSendInstant = Date.now()
+  return sendSuccessful
 }
 
 export function setConfig(config) {
