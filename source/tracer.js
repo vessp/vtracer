@@ -1,7 +1,7 @@
 'use strict'
 
 let webSocket = null
-let isConnected = false
+let isConnected = false //webSocket.readyState = WebSocket.OPEN, WebSocket.CLOSED, WebSocket.CONNECTING, WebSocket.CLOSING
 let isConnecting = false
 let lastSendInstant = 0
 let pendingTraces = []
@@ -69,6 +69,12 @@ function doConnect() {
 }
 
 function send(level, ...messages) {
+  messages = messages.map(m => {
+    if(typeof m == 'object')
+      return JSON.stringify(m)
+    return m
+  })
+
   const parcel = {
     'type': 'trace',
     'payload': {
