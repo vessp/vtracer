@@ -69,12 +69,6 @@ function doConnect() {
 }
 
 function send(level, ...messages) {
-  messages = messages.map(m => {
-    if(typeof m == 'object')
-      return JSON.stringify(m)
-    return m
-  })
-
   const parcel = {
     'type': 'trace',
     'payload': {

@@ -3,9 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 exports.setConfig = setConfig;
 exports.logv = logv;
 exports.logd = logd;
@@ -85,11 +82,6 @@ function send(level) {
   for (var _len = arguments.length, messages = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
     messages[_key - 1] = arguments[_key];
   }
-
-  messages = messages.map(function (m) {
-    if ((typeof m === 'undefined' ? 'undefined' : _typeof(m)) == 'object') return JSON.stringify(m);
-    return m;
-  });
 
   var parcel = {
     'type': 'trace',
