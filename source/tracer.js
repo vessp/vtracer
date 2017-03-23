@@ -74,13 +74,13 @@ function send(level, ...messages) {
     if (typeof val === 'function') {
       return val + '' // implicitly `toString` it
     }
-    else if(typeof val === 'object') {
-      return val + ''
-    }
+    // else if(typeof val === 'object') {
+    //   return val + ''
+    // }
     return val
   }
 
-  messages = messages.map(m => JSON.stringify(m, jsonStringifyHandler))
+  // messages = messages.map(m => JSON.stringify(m, jsonStringifyHandler))
 
   const parcel = {
     'type': 'trace',
