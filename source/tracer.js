@@ -69,6 +69,19 @@ function doConnect() {
 }
 
 function send(level, ...messages) {
+
+  const jsonStringifyHandler = (key,val) => {
+    if (typeof val === 'function') {
+      return val + '' // implicitly `toString` it
+    }
+    else if(typeof val === 'object') {
+      return val + ''
+    }
+    return val
+  }
+
+  messages = messages.map(m => JSON.stringify(m, jsonStringifyHandler))
+
   const parcel = {
     'type': 'trace',
     'payload': {
@@ -79,7 +92,7 @@ function send(level, ...messages) {
     }
   }
 
-  const jtrace = JSON.stringify(parcel)
+  const jtrace = JSON.stringify(parcel, jsonStringifyHandler)
   _send(jtrace)
 }
 

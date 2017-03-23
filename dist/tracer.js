@@ -3,6 +3,9 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 exports.setConfig = setConfig;
 exports.logv = logv;
 exports.logd = logd;
@@ -83,6 +86,19 @@ function send(level) {
     messages[_key - 1] = arguments[_key];
   }
 
+  var jsonStringifyHandler = function jsonStringifyHandler(key, val) {
+    if (typeof val === 'function') {
+      return val + ''; // implicitly `toString` it
+    } else if ((typeof val === 'undefined' ? 'undefined' : _typeof(val)) === 'object') {
+      return val + '';
+    }
+    return val;
+  };
+
+  messages = messages.map(function (m) {
+    return JSON.stringify(m, jsonStringifyHandler);
+  });
+
   var parcel = {
     'type': 'trace',
     'payload': {
@@ -93,7 +109,7 @@ function send(level) {
     }
   };
 
-  var jtrace = JSON.stringify(parcel);
+  var jtrace = JSON.stringify(parcel, jsonStringifyHandler);
   _send(jtrace);
 }
 
