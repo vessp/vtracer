@@ -3,9 +3,6 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 exports.setConfig = setConfig;
 exports.logv = logv;
 exports.logd = logd;
@@ -82,22 +79,22 @@ function doConnect() {
 }
 
 function send(level) {
-  for (var _len = arguments.length, messages = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    messages[_key - 1] = arguments[_key];
-  }
 
   var jsonStringifyHandler = function jsonStringifyHandler(key, val) {
     if (typeof val === 'function') {
       return val + ''; // implicitly `toString` it
-    } else if ((typeof val === 'undefined' ? 'undefined' : _typeof(val)) === 'object') {
-      return val + '';
     }
+    // else if(typeof val === 'object') {
+    //   return val + ''
+    // }
     return val;
   };
 
-  messages = messages.map(function (m) {
-    return JSON.stringify(m, jsonStringifyHandler);
-  });
+  // messages = messages.map(m => JSON.stringify(m, jsonStringifyHandler))
+
+  for (var _len = arguments.length, messages = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    messages[_key - 1] = arguments[_key];
+  }
 
   var parcel = {
     'type': 'trace',
