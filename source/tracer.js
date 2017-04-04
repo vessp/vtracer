@@ -6,6 +6,7 @@ let isConnecting = false
 let lastSendInstant = 0
 let pendingTraces = []
 let numFailedConnectAttempts = 0
+let reconnectTimeout = null
 
 const MAX_PENDING_LENGTH = 100
 
@@ -27,6 +28,9 @@ function doConnect() {
     selfLog('vtracer error: cannot connect because _config.serverUrl is null')
     return
   }
+
+  clearTimeout(reconnectTimeout)
+  reconnectTimeout = null
 
   isConnected = false
   isConnecting = true
@@ -57,14 +61,14 @@ function doConnect() {
     // if(Date.now() - lastSendInstant < 1000*60*5)
     //lets try to always be connected for now
     const timeout = numFailedConnectAttempts <= 1 ? 1000 : 60000
-    setTimeout(() => doConnect(), timeout)
+    reconnectTimeout = setTimeout(() => doConnect(), timeout)
   }
   // webSocket.onmessage = (event) => {
 
   // }
   webSocket.onerror = (event) => {
     isConnecting = false
-    selfLog('vtracer Socket Error: event=' + event)
+    selfLog('vtracer Socket Error: event=' + event.message)
   }
 }
 
@@ -111,7 +115,7 @@ function _send(jtrace) {
     if(pendingTraces.length >= MAX_PENDING_LENGTH)
       pendingTraces.splice(0,1) //remove first element
     pendingTraces.push(jtrace)
-    if(!isConnected && !isConnecting)
+    if(!isConnected && !isConnecting && !reconnectTimeout)
       doConnect()
   }
   lastSendInstant = Date.now()
