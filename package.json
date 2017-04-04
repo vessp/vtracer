@@ -1,11 +1,11 @@
 {
   "name": "vtracer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "dist/tracer.js",
   "scripts": {
     "build": "babel source --presets babel-preset-es2015 --out-dir dist",
-    "postinstall": "npm run build"
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
