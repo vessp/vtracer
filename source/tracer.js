@@ -53,7 +53,7 @@ function doConnect() {
     }
   }
   webSocket.onclose = (event) => {
-    selfLog('vtracer websocket.onclose, code=' + event.code + ', reason=' + event.reason)
+    selfLog('vtracer websocket.onclose, code=' + event.code + ', reason=' + event.reason + ', message=' + event.message)
     isConnecting = false
     isConnected = false
     numFailedConnectAttempts++
