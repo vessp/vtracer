@@ -1,4 +1,4 @@
-const vtracer = require('../client/source/tracer')
+const vtracer = require('vtracer')
 // const axios = require('axios')
 
 // vtracer.setConfig({

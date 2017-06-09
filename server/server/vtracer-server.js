@@ -8,10 +8,11 @@ const axios = require('axios')
 function start(_port) {
   const PORT = _port || process.env.PORT || 3065
   const INDEX = path.join(__dirname, '/../site/index.html')
+  const BIN = path.join(__dirname, '/../site/bin')
 
 
   const app = express()
-  app.use("/site/bin", express.static('site/bin'))
+  app.use("/site/bin", express.static(BIN))
 
   //allow requests from other domains (CORS)
   app.use(function(req, res, next) {
@@ -72,7 +73,7 @@ function start(_port) {
   })
 
   const server = app.listen(PORT, () => {
-      console.log(`Listening on ${ PORT }`)
+      console.log(`VTracer Listening on ${ PORT }`)
   });
 
   // console.log('lr', require('livereload'))
@@ -89,13 +90,13 @@ function start(_port) {
   wss.on('connection', (ws) => {
     // console.log('Client connected')
     userCount++
-    console.log('+user -> ' + userCount)
+    // console.log('+user -> ' + userCount)
     yell({type:'userCount', payload:userCount})
 
     ws.on('close', () => {
       // console.log('Client disconnected')
       userCount--
-      console.log('-user -> ' + userCount)
+      // console.log('-user -> ' + userCount)
       yell({type:'userCount', payload:userCount})
     })
 

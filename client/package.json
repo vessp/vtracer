@@ -1,6 +1,6 @@
 {
   "name": "vtracer",
-  "version": "1.0.4",
+  "version": "1.0.6",
   "description": "",
   "main": "dist/tracer.js",
   "scripts": {
@@ -21,7 +21,5 @@
     "babel-cli": "^6.4.5",
     "babel-preset-es2015": "^6.3.13"
   },
-  "dependencies": {
-    "babel-preset-react": "^6.24.1"
-  }
+  "dependencies": {}
 }

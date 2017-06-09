@@ -1,11 +1,12 @@
 {
   "name": "vtracer-server",
-  "version": "1.0.0",
+  "version": "1.0.9",
   "description": "",
-  "main": "./server/server.js",
+  "main": "./server/vtracer-server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "gulp build&&node ./server/server.js"
+    "start": "gulp build&&node ./server/server.js",
+    "prepublish": "gulp build"
   },
   "keywords": [],
   "author": "",

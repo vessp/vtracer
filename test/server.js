@@ -1,7 +1,7 @@
 const express = require('express')
 const path = require('path')
-// const vServer = require('../server/server/vtracer-server')
-// vServer.start()
+const vServer = require('vtracer-server')
+vServer.start()
 
 
 //-----------------------------------------------------------
