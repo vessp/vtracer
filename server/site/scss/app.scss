@@ -1,0 +1,37 @@
+/*
+    This file is converted to css when the app is run.  Import all your scss files here.
+*/
+
+
+@import '../../node_modules/bootstrap-sass/assets/stylesheets/bootstrap';
+
+* {
+  outline: none !important;
+}
+
+.btn-default:focus {
+  background-color: white;
+}
+
+.btn-info {
+  color: #333;
+
+  &:active {
+    color: #333;
+  }
+
+  &:hover {
+    color: #333;
+  }
+
+  &:focus {
+    color: #333;
+  }
+}
+
+@import '../../node_modules/rc-color-picker/dist/rc-color-picker';
+
+// $fa-font-path: '../../node_modules/font-awesome/fonts';
+$fa-font-path: 'https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/fonts';
+@import '../../node_modules/font-awesome/scss/font-awesome';
+@import './main';
