@@ -1,2 +1,6 @@
-dev: gulp or gulp start-dev
+dev: gulp
 prod: gulp start
+
+#Publish
+  update version in package.json
+  npm publish
