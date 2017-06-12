@@ -115,7 +115,7 @@ gulp.task('build', function() {
 
 gulp.task('start', function() {
     process.env.NODE_ENV = 'production'
-    shell.task(['npm run start'])()
+    shell.task(['gulp build && npm run start'])()
 })
 
 gulp.task('start-dev', function() {
