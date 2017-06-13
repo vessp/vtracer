@@ -74,11 +74,18 @@ function send(level, instant, ...messages) {
     return val
   }
 
+  const text = messages.map(m => {
+    if (typeof m === 'string')
+      return m
+    else
+      return JSON.stringify(m, jsonStringifyHandler)
+  }).join(', ')
+
   const payload = {
     bundle: config.bundle,
     instant: instant,
     level: level,
-    text: messages.join(', '),
+    text: text,
   }
 
   if(shouldUseWs) {
